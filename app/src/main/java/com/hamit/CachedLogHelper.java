@@ -20,7 +20,7 @@ public class CachedLogHelper {
         }
     }
 
-    public static void sendCachedLogs(Context context) {
+    public static void sendCachedLogs(Context context, String deviceName) {
         File file = new File(context.getFilesDir(), CACHE_FILE);
         if (!file.exists()) return;
 
@@ -28,7 +28,7 @@ public class CachedLogHelper {
             List<String> lines = Files.readAllLines(file.toPath());
             boolean allSent = true;
             for (String line : lines) {
-                boolean success = FtpUploadHelper.uploadToFTP(line);
+                boolean success = FtpUploadHelper.uploadToFTP(deviceName,line);
                 if (!success) {
                     allSent = false;
                     break;

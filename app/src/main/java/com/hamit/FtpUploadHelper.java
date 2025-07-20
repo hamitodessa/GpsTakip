@@ -1,5 +1,7 @@
 package com.hamit;
 
+import android.content.Context;
+import android.provider.Settings;
 import android.util.Log;
 
 import org.apache.commons.net.ftp.FTP;
@@ -10,7 +12,7 @@ import java.io.IOException;
 
 public class FtpUploadHelper {
 
-    public static boolean uploadToFTP(String content) {
+    public static boolean uploadToFTP(String deviceName, String content) {
         FTPClient ftpClient = new FTPClient();
         try {
             ftpClient.connect("78.189.76.247", 21);
@@ -21,7 +23,8 @@ public class FtpUploadHelper {
             }
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
-            String remoteFilePath = "GPS/cayenne_log.txt";
+            String remoteFilePath = "GPS/" + deviceName + "_log.txt";
+
             ByteArrayInputStream inputStream = new ByteArrayInputStream((content + "\n").getBytes());
             boolean success = ftpClient.appendFile(remoteFilePath, inputStream);
             inputStream.close();

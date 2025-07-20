@@ -62,11 +62,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             boolean locationGranted = false;
             boolean foregroundGranted = true; // eski Android sürümleri için varsayılan olarak true
-
             for (int i = 0; i < permissions.length; i++) {
                 if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
                     locationGranted = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
@@ -76,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
                     foregroundGranted = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
                 }
             }
-
             if (locationGranted && foregroundGranted) {
                 startService(new Intent(this, GPSService.class));
                 Log.d("GPSService", "İzinler verildi → Servis başlatıldı");

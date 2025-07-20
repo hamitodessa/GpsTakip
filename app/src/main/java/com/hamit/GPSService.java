@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -25,10 +26,18 @@ public class GPSService extends Service {
     private LocationManager locationManager;
     private LocationListener locationListener;
 
+    private String cachedDeviceName;
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d("GPSService", "Service started");
+
+        String deviceName = Settings.Secure.getString(getContentResolver(), "bluetooth_name");
+        if (deviceName == null) {
+            deviceName = android.os.Build.MODEL;
+        }
+        cachedDeviceName = deviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
 
         // Foreground için notification başlat
         createNotificationChannel();
@@ -48,11 +57,11 @@ public class GPSService extends Service {
                 Log.d("GPSService", log);
                 new Thread(() -> {
                     try {
-                        boolean success = FtpUploadHelper.uploadToFTP(log);
+                        boolean success = FtpUploadHelper.uploadToFTP(cachedDeviceName,log);
                         if (!success) {
                             CachedLogHelper.cacheLogLocally(getApplicationContext(), log);
                         } else {
-                            CachedLogHelper.sendCachedLogs(getApplicationContext());
+                            CachedLogHelper.sendCachedLogs(getApplicationContext(),cachedDeviceName);
                         }
                     } catch (Exception e) {
                         Log.e("GPSService", "FTP upload hatası: " + e.getMessage(), e);
