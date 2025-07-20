@@ -33,10 +33,7 @@ public class GPSService extends Service {
         super.onCreate();
         Log.d("GPSService", "Service started");
 
-        String deviceName = Settings.Secure.getString(getContentResolver(), "bluetooth_name");
-        if (deviceName == null) {
-            deviceName = android.os.Build.MODEL;
-        }
+        String deviceName =  android.os.Build.MODEL;
         cachedDeviceName = deviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
 
         // Foreground için notification başlat
