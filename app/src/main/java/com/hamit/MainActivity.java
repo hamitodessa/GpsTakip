@@ -23,6 +23,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("GPSService", "Program Başladı");
+
+        Button btnExit = findViewById(R.id.btnExit);
+        btnExit.setOnClickListener(v -> {
+            stopService(new Intent(MainActivity.this, GPSService.class)); // servisi durdur
+            finishAffinity(); // uygulamayı tamamen kapat
+        });
+
         Button btnMinimize = findViewById(R.id.btnMinimize);
         btnMinimize.setOnClickListener(v -> moveTaskToBack(true));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

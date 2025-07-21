@@ -18,5 +18,12 @@
         android:id="@+id/btnMinimize"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Uygulamayı Gizle" />
+        android:text="Uygulamayı Gizle"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btnExit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Uygulamayı Kapat" />
 </LinearLayout>
