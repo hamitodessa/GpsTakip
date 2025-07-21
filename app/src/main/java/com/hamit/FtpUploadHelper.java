@@ -1,7 +1,5 @@
 package com.hamit;
 
-import android.content.Context;
-import android.provider.Settings;
 import android.util.Log;
 
 import org.apache.commons.net.ftp.FTP;
@@ -14,6 +12,7 @@ public class FtpUploadHelper {
 
     public static boolean uploadToFTP(String deviceName, String content) {
         FTPClient ftpClient = new FTPClient();
+        ByteArrayInputStream inputStream = null;
         try {
             ftpClient.connect("78.189.76.247", 21);
             boolean login = ftpClient.login("hamitadmin", "SDFks9hfji3#DEd");
@@ -25,9 +24,8 @@ public class FtpUploadHelper {
             ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
             String remoteFilePath = "GPS/" + deviceName + "_log.txt";
 
-            ByteArrayInputStream inputStream = new ByteArrayInputStream((content + "\n").getBytes());
+            inputStream = new ByteArrayInputStream((content + "\n").getBytes());
             boolean success = ftpClient.appendFile(remoteFilePath, inputStream);
-            inputStream.close();
             if (success) {
                 Log.d("FTP", "Veri gönderildi: " + content);
             } else {
@@ -36,8 +34,19 @@ public class FtpUploadHelper {
             ftpClient.logout();
             ftpClient.disconnect();
             return success;
+
         } catch (IOException ex) {
             Log.e("FTP", "Hata: " + ex.getMessage(), ex);
+            return false;
+
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    Log.e("FTP", "inputStream kapatılırken hata", e);
+                }
+            }
             try {
                 if (ftpClient.isConnected()) {
                     ftpClient.logout();
@@ -46,7 +55,6 @@ public class FtpUploadHelper {
             } catch (IOException ex2) {
                 Log.e("FTP", "Bağlantı kapatma hatası: " + ex2.getMessage(), ex2);
             }
-            return false;
         }
     }
 }

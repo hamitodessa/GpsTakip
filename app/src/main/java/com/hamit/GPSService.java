@@ -13,7 +13,6 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -25,17 +24,15 @@ public class GPSService extends Service {
     private static final String CHANNEL_ID = "gps_service_channel";
     private LocationManager locationManager;
     private LocationListener locationListener;
-
     private String cachedDeviceName;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d("GPSService", "Service started");
-
         String deviceName =  android.os.Build.MODEL;
         cachedDeviceName = deviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
-
+        Log.e("DeviceName", cachedDeviceName);
         // Foreground için notification başlat
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -65,43 +62,34 @@ public class GPSService extends Service {
                     }
                 }).start();
             }
-
             @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
             @Override public void onProviderEnabled(String provider) {}
             @Override public void onProviderDisabled(String provider) {}
         };
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.e("GPSService", "Permission denied");
             stopSelf();
             return;
         }
-
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000, 0, locationListener);
     }
-
     private String getFormattedLocation(Location location) {
         String datetime = java.time.LocalDateTime.now().toString().replace("T", " ");
         return datetime + "," + location.getLatitude() + "," + location.getLongitude();
     }
-
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "GPS Servis Kanalı";
-            String description = "Konum servisi bildirimi";
-            int importance = NotificationManager.IMPORTANCE_LOW;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) manager.createNotificationChannel(channel);
-        }
+        CharSequence name = "GPS Servis Kanalı";
+        String description = "Konum servisi bildirimi";
+        int importance = NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+        channel.setDescription(description);
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager != null) manager.createNotificationChannel(channel);
     }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY; // sistem kapatsa bile tekrar başlatır
     }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -110,7 +98,6 @@ public class GPSService extends Service {
         }
         Log.d("GPSService", "Service stopped");
     }
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
