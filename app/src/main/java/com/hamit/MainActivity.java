@@ -2,6 +2,7 @@ package com.hamit;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -9,7 +10,9 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -20,6 +23,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     private TextView permissionStatus;
+    private EditText deviceNameInput;
+    private static final String PREFS_NAME = "GPSPrefs";
+    private static final String KEY_DEVICE_NAME = "device_name";
+
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +35,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Log.d("GPSService", "Program Başladı");
 
-        permissionStatus = findViewById(R.id.permissionStatus); // TextView
+        permissionStatus = findViewById(R.id.permissionStatus);
+        deviceNameInput = findViewById(R.id.deviceNameInput);
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+        // Kaydedilmiş cihaz adı yükleniyor
+        String savedDeviceName = prefs.getString(KEY_DEVICE_NAME, "");
+        deviceNameInput.setText(savedDeviceName);
+
+        Button btnSaveDeviceName = findViewById(R.id.btnSaveDeviceName);
+        btnSaveDeviceName.setOnClickListener(v -> {
+            String name = deviceNameInput.getText().toString().trim();
+            if (name.isEmpty()) {
+                Toast.makeText(this, "Lütfen cihaz adı girin!", Toast.LENGTH_SHORT).show();
+            } else {
+                prefs.edit().putString(KEY_DEVICE_NAME, name).apply();
+                Toast.makeText(this, "Cihaz adı kaydedildi", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         Button btnExit = findViewById(R.id.btnExit);
         btnExit.setOnClickListener(v -> {
@@ -39,7 +64,10 @@ public class MainActivity extends AppCompatActivity {
         btnMinimize.setOnClickListener(v -> moveTaskToBack(true));
 
         updatePermissionStatus();
+        checkAndStartService();
+    }
 
+    private void checkAndStartService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (hasFineLocationPermission()) {
                 if (hasBackgroundLocationPermission()) {
@@ -47,8 +75,7 @@ public class MainActivity extends AppCompatActivity {
                         requestForegroundLocationPermission();
                         return;
                     }
-                    startService(new Intent(this, GPSService.class));
-                    Log.d("GPSService", "Servis Başlatıldı");
+                    startGPSServiceIfValid();
                 } else {
                     showPermissionSettingsDialog();
                 }
@@ -59,14 +86,29 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             if (hasFineLocationPermission()) {
-                startService(new Intent(this, GPSService.class));
-                Log.d("GPSService", "Servis Başlatıldı (API <29)");
+                startGPSServiceIfValid();
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         LOCATION_PERMISSION_REQUEST_CODE);
             }
         }
+    }
+
+    private void startGPSServiceIfValid() {
+        String deviceName = deviceNameInput.getText().toString().trim();
+        if (deviceName.isEmpty()) {
+            permissionStatus.setText("⚠ Lütfen cihaz adı girin!");
+            return;
+        }
+
+        // Cihaz adını SharedPreferences'e kaydet
+        prefs.edit().putString(KEY_DEVICE_NAME, deviceName).apply();
+
+        Intent serviceIntent = new Intent(this, GPSService.class);
+        serviceIntent.putExtra("device_name", deviceName);
+        startService(serviceIntent);
+        Log.d("GPSService", "Servis Başlatıldı");
     }
 
     private boolean hasFineLocationPermission() {
@@ -95,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         updatePermissionStatus();
+
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (hasFineLocationPermission()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -107,8 +150,7 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                 }
-                startService(new Intent(this, GPSService.class));
-                Log.d("GPSService", "İzinler verildi → Servis Başlatıldı");
+                startGPSServiceIfValid();
             } else {
                 Log.e("GPSService", "Fine Location reddedildi");
             }
@@ -141,12 +183,10 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle("Gerekli İzinler ve Ayarlar")
                 .setMessage("Bu uygulamanın arka planda doğru şekilde çalışabilmesi için aşağıdaki ayarları yapmanız gerekmektedir:\n\n"
                         + "1. 'Ayarları Aç' butonuna tıklayın\n"
-                        + "2. Açılan ekranda 'İzinler' (Permissions) bölümüne girin\n"
-                        + "3. 'Konum' (Location) seçeneğine dokunun\n"
-                        + "4. 'Her zaman izin ver' (Allow all the time) seçeneğini seçin\n\n"
-                        + "5. Geri gelin ve 'Pil' (Battery) > 'Pil optimizasyonu' veya 'Arka plan etkinliği' bölümüne girin\n"
-                        + "6. Uygulama için 'Sınırsız' (Unrestricted) seçeneğini seçin\n\n"
-                        + "Bu ayarlar yapılmazsa GPS servisi arka planda durdurulabilir.")
+                        + "2. Açılan ekranda 'İzinler' bölümüne girin\n"
+                        + "3. 'Konum' seçeneğine dokunun\n"
+                        + "4. 'Her zaman izin ver' seçeneğini seçin\n\n"
+                        + "5. Pil > Pil optimizasyonu > Arka plan etkinliği → 'Sınırsız' seçeneğini seçin")
                 .setPositiveButton("Ayarları Aç", (dialog, which) -> {
                     Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                     intent.setData(Uri.parse("package:" + getPackageName()));

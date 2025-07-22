@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
@@ -30,13 +31,9 @@ public class GPSService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("GPSService", "Service started");
-
-        String deviceName = android.os.Build.MODEL;
-        cachedDeviceName = deviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
-        Log.e("DeviceName", cachedDeviceName);
-
+        Log.d("GPSService", "onCreate çağrıldı");
         createNotificationChannel();
+
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("GPS Takip Aktif")
                 .setContentText("Konum verisi gönderiliyor...")
@@ -49,6 +46,28 @@ public class GPSService extends Service {
         } else {
             startForeground(1, notification);
         }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("GPSService", "onStartCommand çağrıldı");
+
+        cachedDeviceName = intent.getStringExtra("device_name");
+
+        if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty()) {
+            // SharedPreferences'tan yedek çek
+            SharedPreferences prefs = getSharedPreferences("GPSPrefs", MODE_PRIVATE);
+            cachedDeviceName = prefs.getString("device_name", "");
+        }
+
+        if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty()) {
+            Log.e("GPSService", "Cihaz adı boş, servis durduruluyor");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        cachedDeviceName = cachedDeviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
+        Log.e("DeviceName", cachedDeviceName);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -63,16 +82,14 @@ public class GPSService extends Service {
         };
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("GPSService", "Permission denied");
+            Log.e("GPSService", "İzin yok → servis kapatılıyor");
             stopSelf();
-            return;
+            return START_NOT_STICKY;
         }
 
-        // GPS provider aktif mi?
         boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         Log.d("GPSService", "GPS provider aktif mi? → " + isGpsEnabled);
 
-        // Son bilinen konumu çek ve işle
         Location lastKnown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (lastKnown != null) {
             Log.d("GPSService", "Son bilinen konum: " + lastKnown.getLatitude() + "," + lastKnown.getLongitude());
@@ -81,8 +98,9 @@ public class GPSService extends Service {
             Log.w("GPSService", "Son bilinen konum yok.");
         }
 
-        // Konum dinlemeye başla
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30_000, 0, locationListener);
+
+        return START_STICKY;
     }
 
     private void handleNewLocation(Location location) {
@@ -120,17 +138,12 @@ public class GPSService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY;
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
-        Log.d("GPSService", "Service stopped");
+        Log.d("GPSService", "Servis durduruldu");
     }
 
     @Nullable

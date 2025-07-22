@@ -1,38 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="#F9F9F9">
 
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="GPS Takip Başlatıldı"
-        android:textSize="18sp"
-        android:layout_marginBottom="24dp" />
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-    <Button
-        android:id="@+id/btnMinimize"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Uygulamayı Gizle"
-        android:layout_marginBottom="12dp" />
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📡 GPS Takip Aktif"
+            android:textSize="22sp"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
 
-    <Button
-        android:id="@+id/btnExit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Uygulamayı Kapat" />
+        <EditText
+            android:id="@+id/deviceNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="🚘 Cihaz adı girin"
+            android:inputType="text"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="12dp" />
 
-    <TextView
-        android:id="@+id/permissionStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="İzin durumu kontrol ediliyor..."
-        android:textColor="#FF5722"
-        android:textSize="14sp"
-        android:layout_marginTop="12dp" />
-</LinearLayout>
+        <Button
+            android:id="@+id/btnSaveDeviceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💾 Cihaz Adını Kaydet"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#2196F3"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnMinimize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔽 Uygulamayı Gizle"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnExit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="❌ Uygulamayı Kapat"
+            android:backgroundTint="#F44336"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/permissionStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📋 İzin durumu kontrol ediliyor..."
+            android:textColor="#607D8B"
+            android:textSize="14sp"
+            android:layout_marginTop="24dp"
+            android:padding="12dp"
+            android:background="#ECEFF1"
+            android:gravity="center" />
+    </LinearLayout>
+</ScrollView>
