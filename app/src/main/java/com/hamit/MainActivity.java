@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -18,20 +19,27 @@ import androidx.core.app.ActivityCompat;
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
+    private TextView permissionStatus;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("GPSService", "Program Başladı");
 
+        permissionStatus = findViewById(R.id.permissionStatus); // TextView
+
         Button btnExit = findViewById(R.id.btnExit);
         btnExit.setOnClickListener(v -> {
-            stopService(new Intent(MainActivity.this, GPSService.class)); // servisi durdur
-            finishAffinity(); // uygulamayı tamamen kapat
+            stopService(new Intent(MainActivity.this, GPSService.class));
+            finishAffinity();
         });
 
         Button btnMinimize = findViewById(R.id.btnMinimize);
         btnMinimize.setOnClickListener(v -> moveTaskToBack(true));
+
+        updatePermissionStatus();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (hasFineLocationPermission()) {
                 if (hasBackgroundLocationPermission()) {
@@ -60,27 +68,33 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     private boolean hasFineLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private boolean hasBackgroundLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private boolean hasForegroundLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private void requestForegroundLocationPermission() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.FOREGROUND_SERVICE_LOCATION},
                 LOCATION_PERMISSION_REQUEST_CODE);
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        updatePermissionStatus();
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (hasFineLocationPermission()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -89,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                     if (Build.VERSION.SDK_INT >= 34 && !hasForegroundLocationPermission()) {
-                        // tekrar foreground location iste
                         requestForegroundLocationPermission();
                         return;
                     }
@@ -101,6 +114,28 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void updatePermissionStatus() {
+        StringBuilder sb = new StringBuilder("İzin Durumu:\n");
+
+        if (hasFineLocationPermission()) sb.append("✓ Fine Location\n");
+        else sb.append("✗ Fine Location\n");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (hasBackgroundLocationPermission()) sb.append("✓ Background Location\n");
+            else sb.append("✗ Background Location\n");
+        }
+
+        if (Build.VERSION.SDK_INT >= 34) {
+            if (hasForegroundLocationPermission()) sb.append("✓ Foreground Service Location\n");
+            else sb.append("✗ Foreground Service Location\n");
+        }
+
+        if (permissionStatus != null) {
+            permissionStatus.setText(sb.toString());
+        }
+    }
+
     private void showPermissionSettingsDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Gerekli İzinler ve Ayarlar")

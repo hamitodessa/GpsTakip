@@ -14,12 +14,14 @@ public class FtpUploadHelper {
         FTPClient ftpClient = new FTPClient();
         ByteArrayInputStream inputStream = null;
         try {
+            Log.d("FTP", "Bağlantı kuruluyor...");
             ftpClient.connect("78.189.76.247", 21);
             boolean login = ftpClient.login("hamitadmin", "SDFks9hfji3#DEd");
             if (!login) {
                 Log.e("FTP", "Login başarısız!");
                 return false;
             }
+            Log.d("FTP", "Bağlantı kuruluyor...");
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
             String remoteFilePath = "GPS/" + deviceName + "_log.txt";
