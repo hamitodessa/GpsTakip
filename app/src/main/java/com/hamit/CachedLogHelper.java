@@ -19,11 +19,9 @@ public class CachedLogHelper {
             e.printStackTrace();
         }
     }
-
     public static void sendCachedLogs(Context context, String deviceName) {
         File file = new File(context.getFilesDir(), CACHE_FILE);
         if (!file.exists()) return;
-
         try {
             List<String> lines = Files.readAllLines(file.toPath());
             boolean allSent = true;

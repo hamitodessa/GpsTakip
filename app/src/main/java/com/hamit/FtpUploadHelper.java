@@ -36,11 +36,9 @@ public class FtpUploadHelper {
             ftpClient.logout();
             ftpClient.disconnect();
             return success;
-
         } catch (IOException ex) {
             Log.e("FTP", "Hata: " + ex.getMessage(), ex);
             return false;
-
         } finally {
             if (inputStream != null) {
                 try {

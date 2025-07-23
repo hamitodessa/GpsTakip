@@ -21,12 +21,10 @@ import androidx.core.app.ActivityCompat;
 
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
-
     private TextView permissionStatus;
     private EditText deviceNameInput;
     private static final String PREFS_NAME = "GPSPrefs";
     private static final String KEY_DEVICE_NAME = "device_name";
-
     private SharedPreferences prefs;
 
     @Override
@@ -101,43 +99,34 @@ public class MainActivity extends AppCompatActivity {
             permissionStatus.setText("⚠ Lütfen cihaz adı girin!");
             return;
         }
-
-        // Cihaz adını SharedPreferences'e kaydet
         prefs.edit().putString(KEY_DEVICE_NAME, deviceName).apply();
-
         Intent serviceIntent = new Intent(this, GPSService.class);
         serviceIntent.putExtra("device_name", deviceName);
         startService(serviceIntent);
         Log.d("GPSService", "Servis Başlatıldı");
     }
-
     private boolean hasFineLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
-
     private boolean hasBackgroundLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
-
     private boolean hasForegroundLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
-
     private void requestForegroundLocationPermission() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.FOREGROUND_SERVICE_LOCATION},
                 LOCATION_PERMISSION_REQUEST_CODE);
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         updatePermissionStatus();
-
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (hasFineLocationPermission()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -156,10 +145,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     private void updatePermissionStatus() {
         StringBuilder sb = new StringBuilder("İzin Durumu:\n");
-
         if (hasFineLocationPermission()) sb.append("✓ Fine Location\n");
         else sb.append("✗ Fine Location\n");
 
@@ -167,17 +154,14 @@ public class MainActivity extends AppCompatActivity {
             if (hasBackgroundLocationPermission()) sb.append("✓ Background Location\n");
             else sb.append("✗ Background Location\n");
         }
-
         if (Build.VERSION.SDK_INT >= 34) {
             if (hasForegroundLocationPermission()) sb.append("✓ Foreground Service Location\n");
             else sb.append("✗ Foreground Service Location\n");
         }
-
         if (permissionStatus != null) {
             permissionStatus.setText(sb.toString());
         }
     }
-
     private void showPermissionSettingsDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Gerekli İzinler ve Ayarlar")
