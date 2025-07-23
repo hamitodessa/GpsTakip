@@ -21,7 +21,6 @@ public class FtpUploadHelper {
                 Log.e("FTP", "Login başarısız!");
                 return false;
             }
-            Log.d("FTP", "Bağlantı kuruluyor...");
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
             String remoteFilePath = "GPS/" + deviceName + "_log.txt";

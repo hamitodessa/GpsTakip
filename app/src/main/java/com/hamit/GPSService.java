@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -39,6 +40,10 @@ public class GPSService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d("GPSService", "onCreate çağrıldı");
+
+        Log.d("GPSService", "onCreate çalıştı!!!");
+        Toast.makeText(this, "GPS Servis Başladı!", Toast.LENGTH_LONG).show(); // GEÇİCİ TEST İÇİN
+
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("GPS Takip Aktif")
@@ -92,38 +97,25 @@ public class GPSService extends Service {
             Log.w("GPSService", "Son bilinen konum yok.");
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10_000, 0, locationListener);
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                List<String> toUpload;
-                synchronized (konumListesi) {
-                    if (konumListesi.isEmpty()) return;
-                    toUpload = new ArrayList<>(konumListesi);
-                    konumListesi.clear();
-                }
-                new Thread(() -> {
-                    try {
-                        StringBuilder fullData = new StringBuilder();
-                        for (String log : toUpload) {
-                            fullData.append(log).append("\n");
-                        }
-                        boolean success = FtpUploadHelper.uploadToFTP(cachedDeviceName, fullData.toString());
-                        if (!success) {
-                            CachedLogHelper.cacheLogLocally(getApplicationContext(), fullData.toString());
-                        } else {
-                            CachedLogHelper.sendCachedLogs(getApplicationContext(), cachedDeviceName);
-                        }
-                    } catch (Exception e) {
-                        Log.e("GPSService", "Toplu FTP upload hatası: " + e.getMessage(), e);
-                    }
-                }).start();
-            }
-        }, 5_000, 300_000); // 5 saniye sonra başla, 5 dakikada bir çalış
+
         return START_STICKY;
     }
     private void handleNewLocation(Location location) {
+        Log.d("GPSService", "Konum alındı: " + location.getLatitude() + "," + location.getLongitude());
         String log = getFormattedLocation(location);
-        konumListesi.add(log);
+
+        new Thread(() -> {
+            try {
+                boolean success = FtpUploadHelper.uploadToFTP(cachedDeviceName, log);
+                if (!success) {
+                    CachedLogHelper.cacheLogLocally(getApplicationContext(), log);
+                } else {
+                    CachedLogHelper.sendCachedLogs(getApplicationContext(), cachedDeviceName);
+                }
+            } catch (Exception e) {
+                Log.e("GPSService", "FTP upload hatası: " + e.getMessage(), e);
+            }
+        }).start();
     }
     private String getFormattedLocation(Location location) {
         String datetime = java.time.LocalDateTime.now().toString().replace("T", " ");
