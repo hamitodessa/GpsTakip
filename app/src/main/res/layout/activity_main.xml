@@ -22,6 +22,16 @@
             android:layout_marginBottom="24dp" />
 
         <EditText
+            android:id="@+id/emailNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="📧 OBS Web kullanıcı e-postanızı girin"
+            android:inputType="textEmailAddress"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="12dp"/>
+
+        <EditText
             android:id="@+id/deviceNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

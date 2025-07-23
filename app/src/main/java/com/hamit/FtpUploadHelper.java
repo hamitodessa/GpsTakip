@@ -23,7 +23,7 @@ public class FtpUploadHelper {
             }
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
-            String remoteFilePath = "GPS/" + deviceName + "_log.txt";
+            String remoteFilePath = "GPS/" + deviceName ;
 
             inputStream = new ByteArrayInputStream((content + "\n").getBytes());
             boolean success = ftpClient.appendFile(remoteFilePath, inputStream);

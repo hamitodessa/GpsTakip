@@ -23,8 +23,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private TextView permissionStatus;
     private EditText deviceNameInput;
+    private EditText emailNameInput;
+
     private static final String PREFS_NAME = "GPSPrefs";
     private static final String KEY_DEVICE_NAME = "device_name";
+
+    private static final String KEY_EMAIL_NAME = "email_name";
     private SharedPreferences prefs;
 
     @Override
@@ -35,22 +39,33 @@ public class MainActivity extends AppCompatActivity {
 
         permissionStatus = findViewById(R.id.permissionStatus);
         deviceNameInput = findViewById(R.id.deviceNameInput);
+        emailNameInput = findViewById(R.id.emailNameInput);
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // Kaydedilmiş cihaz adı yükleniyor
+// Kaydedilmiş cihaz adı ve e-posta yükleniyor
         String savedDeviceName = prefs.getString(KEY_DEVICE_NAME, "");
+        String savedEmailName = prefs.getString(KEY_EMAIL_NAME, "");
         deviceNameInput.setText(savedDeviceName);
+        emailNameInput.setText(savedEmailName);
 
         Button btnSaveDeviceName = findViewById(R.id.btnSaveDeviceName);
         btnSaveDeviceName.setOnClickListener(v -> {
             String name = deviceNameInput.getText().toString().trim();
+            String email = emailNameInput.getText().toString().trim();
+
             if (name.isEmpty()) {
                 Toast.makeText(this, "Lütfen cihaz adı girin!", Toast.LENGTH_SHORT).show();
+            } else if (email.isEmpty()) {
+                Toast.makeText(this, "Lütfen e-posta adresi girin!", Toast.LENGTH_SHORT).show();
             } else {
-                prefs.edit().putString(KEY_DEVICE_NAME, name).apply();
-                Toast.makeText(this, "Cihaz adı kaydedildi", Toast.LENGTH_SHORT).show();
+                prefs.edit()
+                        .putString(KEY_DEVICE_NAME, name)
+                        .putString(KEY_EMAIL_NAME, email)
+                        .apply();
+                Toast.makeText(this, "Cihaz adı ve e-posta kaydedildi", Toast.LENGTH_SHORT).show();
             }
         });
+
 
         Button btnExit = findViewById(R.id.btnExit);
         btnExit.setOnClickListener(v -> {

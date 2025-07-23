@@ -33,8 +33,8 @@ public class GPSService extends Service {
     private static final String CHANNEL_ID = "gps_service_channel";
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private String cachedDeviceName;
-    private final List<String> konumListesi = Collections.synchronizedList(new ArrayList<>());
+
+    private String fileName;
 
     @Override
     public void onCreate() {
@@ -60,33 +60,51 @@ public class GPSService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("GPSService", "onStartCommand çağrıldı");
-        cachedDeviceName = intent.getStringExtra("device_name");
+
+        SharedPreferences prefs = getSharedPreferences("GPSPrefs", MODE_PRIVATE);
+
+        String cachedDeviceName = intent.getStringExtra("device_name");
         if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty()) {
-            SharedPreferences prefs = getSharedPreferences("GPSPrefs", MODE_PRIVATE);
             cachedDeviceName = prefs.getString("device_name", "");
         }
-        if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty()) {
-            Log.e("GPSService", "Cihaz adı boş, servis durduruluyor");
+
+        String cachedEmail = intent.getStringExtra("email_name");
+        if (cachedEmail == null || cachedEmail.trim().isEmpty()) {
+            cachedEmail = prefs.getString("email_name", "");
+        }
+
+        if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty() ||
+                cachedEmail == null || cachedEmail.trim().isEmpty()) {
+            Log.e("GPSService", "Cihaz adı veya email boş, servis durduruluyor");
             stopSelf();
             return START_NOT_STICKY;
         }
+
+        if (cachedDeviceName.toLowerCase().endsWith(".txt")) {
+            cachedDeviceName = cachedDeviceName.substring(0, cachedDeviceName.length() - 4);
+        }
         cachedDeviceName = cachedDeviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
-        Log.e("DeviceName", cachedDeviceName);
+        cachedEmail = cachedEmail.replaceAll("[^a-zA-Z0-9@._-]", "_");
+        if (cachedDeviceName.toLowerCase().endsWith(".txt")) {
+            cachedDeviceName = cachedDeviceName.substring(0, cachedDeviceName.length() - 4);
+        }
+        fileName = cachedEmail + "_" + cachedDeviceName + "_log.txt";
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
+            @Override public void onLocationChanged(Location location) {
                 handleNewLocation(location);
             }
             @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
             @Override public void onProviderEnabled(String provider) {}
             @Override public void onProviderDisabled(String provider) {}
         };
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.e("GPSService", "İzin yok → servis kapatılıyor");
             stopSelf();
             return START_NOT_STICKY;
         }
+
         boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         Log.d("GPSService", "GPS provider aktif mi? → " + isGpsEnabled);
         Location lastKnown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -96,21 +114,22 @@ public class GPSService extends Service {
         } else {
             Log.w("GPSService", "Son bilinen konum yok.");
         }
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10_000, 0, locationListener);
 
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10_000, 0, locationListener);
         return START_STICKY;
     }
+
     private void handleNewLocation(Location location) {
         Log.d("GPSService", "Konum alındı: " + location.getLatitude() + "," + location.getLongitude());
         String log = getFormattedLocation(location);
 
         new Thread(() -> {
             try {
-                boolean success = FtpUploadHelper.uploadToFTP(cachedDeviceName, log);
+                boolean success = FtpUploadHelper.uploadToFTP(fileName, log);
                 if (!success) {
                     CachedLogHelper.cacheLogLocally(getApplicationContext(), log);
                 } else {
-                    CachedLogHelper.sendCachedLogs(getApplicationContext(), cachedDeviceName);
+                    CachedLogHelper.sendCachedLogs(getApplicationContext(), fileName);
                 }
             } catch (Exception e) {
                 Log.e("GPSService", "FTP upload hatası: " + e.getMessage(), e);
