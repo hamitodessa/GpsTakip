@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "GPSPrefs";
     private static final String KEY_DEVICE_NAME = "device_name";
     private static final String KEY_EMAIL_NAME = "email_name";
-    private static final String KEY_RUN_ON_STARTUP = "run_on_startup";
+    private static final String KEY_RUN_ON_STARTUP = "runOnStartup";
 
     private SharedPreferences prefs;
 
@@ -65,21 +66,26 @@ public class MainActivity extends AppCompatActivity {
             String name = deviceNameInput.getText().toString().trim();
             String email = emailNameInput.getText().toString().trim();
             boolean runOnStartup = checkboxRunOnStartup.isChecked();
-
             if (name.isEmpty()) {
                 Toast.makeText(this, "Lütfen cihaz adı girin!", Toast.LENGTH_SHORT).show();
-            } else if (email.isEmpty()) {
-                Toast.makeText(this, "Lütfen e-posta adresi girin!", Toast.LENGTH_SHORT).show();
-            } else {
-                prefs.edit()
-                        .putString(KEY_DEVICE_NAME, name)
-                        .putString(KEY_EMAIL_NAME, email)
-                        .putBoolean(KEY_RUN_ON_STARTUP, runOnStartup)
-                        .apply();
-                Toast.makeText(this, "Cihaz adı, e-posta ve başlangıç ayarı kaydedildi", Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
+            if (email.isEmpty()) {
+                Toast.makeText(this, "Lütfen e-posta adresi girin!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(this, "Geçerli bir e-posta adresi girin!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            prefs.edit()
+                    .putString(KEY_DEVICE_NAME, name)
+                    .putString(KEY_EMAIL_NAME, email)
+                    .putBoolean(KEY_RUN_ON_STARTUP, runOnStartup)
+                    .apply();
 
+            Toast.makeText(this, "Cihaz adı, e-posta ve başlangıç ayarı kaydedildi", Toast.LENGTH_SHORT).show();
+        });
         Button btnExit = findViewById(R.id.btnExit);
         btnExit.setOnClickListener(v -> {
             stopService(new Intent(MainActivity.this, GPSService.class));
@@ -141,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
         startService(serviceIntent);
 
         Log.d("GPSService", "Servis Başlatıldı");
+        Toast.makeText(this, "GPS servisi başlatıldı", Toast.LENGTH_SHORT).show();
     }
 
     private boolean hasFineLocationPermission() {
