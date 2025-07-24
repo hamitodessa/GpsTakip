@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#f06292</item>
+        <item name="colorPrimaryDark">#c2185b</item>
+        <item name="colorAccent">#f8bbd0</item>
+    </style>
+
+    <style name="FancyButton">
+        <item name="android:backgroundTint">#f06292</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:layout_marginBottom">12dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:elevation">4dp</item>
+    </style>
+
+    <style name="ElegantText">
+        <item name="android:textColor">#4A148C</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">italic</item>
+    </style>
+
+
+</resources>

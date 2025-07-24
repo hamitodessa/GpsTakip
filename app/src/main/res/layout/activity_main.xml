@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="#F9F9F9">
+    android:background="#FFFFFF"
+    android:padding="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,56 +15,69 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="📡 GPS Takip Aktif"
-            android:textSize="22sp"
-            android:textColor="#333333"
+            android:textSize="24sp"
+            android:textColor="#0D47A1"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
 
         <EditText
             android:id="@+id/emailNameInput"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="📧 OBS Web kullanıcı e-postanızı girin"
+            android:layout_height="50dp"
+            android:hint="📧 OBS e-posta adresi"
             android:inputType="textEmailAddress"
+            android:backgroundTint="#90CAF9"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
             android:layout_marginBottom="12dp"/>
 
         <EditText
             android:id="@+id/deviceNameInput"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="🚘 Cihaz adı girin"
+            android:layout_height="50dp"
+            android:hint="🚘 Cihaz adı"
             android:inputType="text"
+            android:backgroundTint="#90CAF9"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="12dp"/>
+
+        <CheckBox
+            android:id="@+id/checkboxRunOnStartup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔄 Cihaz açıldığında otomatik başlat"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="20dp" />
 
         <Button
             android:id="@+id/btnSaveDeviceName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="💾 Cihaz Adını Kaydet"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#2196F3"
-            android:textColor="#FFFFFF" />
+            android:text="💾 Ayarları Kaydet"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1976D2"
+            android:layout_marginBottom="16dp"/>
 
         <Button
             android:id="@+id/btnMinimize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="🔽 Uygulamayı Gizle"
-            android:layout_marginBottom="12dp"
-            android:backgroundTint="#FF9800"
-            android:textColor="#FFFFFF" />
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#FFA726"
+            android:layout_marginBottom="12dp"/>
 
         <Button
             android:id="@+id/btnExit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="❌ Uygulamayı Kapat"
-            android:backgroundTint="#F44336"
-            android:textColor="#FFFFFF" />
+            android:text="❌ Çıkış Yap"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#E53935"
+            android:layout_marginBottom="20dp"/>
 
         <TextView
             android:id="@+id/permissionStatus"
@@ -74,9 +86,19 @@
             android:text="📋 İzin durumu kontrol ediliyor..."
             android:textColor="#607D8B"
             android:textSize="14sp"
-            android:layout_marginTop="24dp"
             android:padding="12dp"
             android:background="#ECEFF1"
             android:gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💘 Her adımını biliyorum... çünkü seni seviyorum."
+            android:textColor="#AD1457"
+            android:textSize="14sp"
+            android:layout_marginTop="32dp"
+            android:gravity="center"
+            android:textStyle="italic"/>
+
     </LinearLayout>
 </ScrollView>

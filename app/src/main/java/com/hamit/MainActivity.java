@@ -9,7 +9,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,11 +27,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView permissionStatus;
     private EditText deviceNameInput;
     private EditText emailNameInput;
+    private CheckBox checkboxRunOnStartup;
 
     private static final String PREFS_NAME = "GPSPrefs";
     private static final String KEY_DEVICE_NAME = "device_name";
-
     private static final String KEY_EMAIL_NAME = "email_name";
+    private static final String KEY_RUN_ON_STARTUP = "run_on_startup";
+
     private SharedPreferences prefs;
 
     @Override
@@ -40,18 +45,26 @@ public class MainActivity extends AppCompatActivity {
         permissionStatus = findViewById(R.id.permissionStatus);
         deviceNameInput = findViewById(R.id.deviceNameInput);
         emailNameInput = findViewById(R.id.emailNameInput);
+        checkboxRunOnStartup = findViewById(R.id.checkboxRunOnStartup);
+
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-// Kaydedilmiş cihaz adı ve e-posta yükleniyor
         String savedDeviceName = prefs.getString(KEY_DEVICE_NAME, "");
         String savedEmailName = prefs.getString(KEY_EMAIL_NAME, "");
+        boolean savedRunOnStartup = prefs.getBoolean(KEY_RUN_ON_STARTUP, false);
+
         deviceNameInput.setText(savedDeviceName);
         emailNameInput.setText(savedEmailName);
+        checkboxRunOnStartup.setChecked(savedRunOnStartup);
 
         Button btnSaveDeviceName = findViewById(R.id.btnSaveDeviceName);
         btnSaveDeviceName.setOnClickListener(v -> {
+            Animation scaleUp = AnimationUtils.loadAnimation(this, R.anim.scale_up);
+            v.startAnimation(scaleUp);
+
             String name = deviceNameInput.getText().toString().trim();
             String email = emailNameInput.getText().toString().trim();
+            boolean runOnStartup = checkboxRunOnStartup.isChecked();
 
             if (name.isEmpty()) {
                 Toast.makeText(this, "Lütfen cihaz adı girin!", Toast.LENGTH_SHORT).show();
@@ -61,11 +74,11 @@ public class MainActivity extends AppCompatActivity {
                 prefs.edit()
                         .putString(KEY_DEVICE_NAME, name)
                         .putString(KEY_EMAIL_NAME, email)
+                        .putBoolean(KEY_RUN_ON_STARTUP, runOnStartup)
                         .apply();
-                Toast.makeText(this, "Cihaz adı ve e-posta kaydedildi", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Cihaz adı, e-posta ve başlangıç ayarı kaydedildi", Toast.LENGTH_SHORT).show();
             }
         });
-
 
         Button btnExit = findViewById(R.id.btnExit);
         btnExit.setOnClickListener(v -> {
@@ -110,33 +123,47 @@ public class MainActivity extends AppCompatActivity {
 
     private void startGPSServiceIfValid() {
         String deviceName = deviceNameInput.getText().toString().trim();
-        if (deviceName.isEmpty()) {
-            permissionStatus.setText("⚠ Lütfen cihaz adı girin!");
+        String emailName = emailNameInput.getText().toString().trim();
+
+        if (deviceName.isEmpty() || emailName.isEmpty()) {
+            permissionStatus.setText("⚠ Lütfen cihaz adı ve e-posta girin!");
             return;
         }
-        prefs.edit().putString(KEY_DEVICE_NAME, deviceName).apply();
+
+        prefs.edit()
+                .putString(KEY_DEVICE_NAME, deviceName)
+                .putString(KEY_EMAIL_NAME, emailName)
+                .apply();
+
         Intent serviceIntent = new Intent(this, GPSService.class);
         serviceIntent.putExtra("device_name", deviceName);
+        serviceIntent.putExtra("email_name", emailName);
         startService(serviceIntent);
+
         Log.d("GPSService", "Servis Başlatıldı");
     }
+
     private boolean hasFineLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private boolean hasBackgroundLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private boolean hasForegroundLocationPermission() {
         return ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private void requestForegroundLocationPermission() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.FOREGROUND_SERVICE_LOCATION},
                 LOCATION_PERMISSION_REQUEST_CODE);
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -160,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     private void updatePermissionStatus() {
         StringBuilder sb = new StringBuilder("İzin Durumu:\n");
         if (hasFineLocationPermission()) sb.append("✓ Fine Location\n");
@@ -177,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
             permissionStatus.setText(sb.toString());
         }
     }
+
     private void showPermissionSettingsDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Gerekli İzinler ve Ayarlar")
