@@ -122,20 +122,22 @@ public class GPSService extends Service {
     private void handleNewLocation(Location location) {
         Log.d("GPSService", "Konum alındı: " + location.getLatitude() + "," + location.getLongitude());
         String log = getFormattedLocation(location);
-
         new Thread(() -> {
             try {
+                // Önce varsa eski logları gönder
+                CachedLogHelper.sendCachedLogs(getApplicationContext(), fileName);
+                // Sonra yeni veriyi gönder
                 boolean success = FtpUploadHelper.uploadToFTP(fileName, log);
+                // Eğer yeni veri gönderilemediyse cache'e al
                 if (!success) {
                     CachedLogHelper.cacheLogLocally(getApplicationContext(), log);
-                } else {
-                    CachedLogHelper.sendCachedLogs(getApplicationContext(), fileName);
                 }
             } catch (Exception e) {
                 Log.e("GPSService", "FTP upload hatası: " + e.getMessage(), e);
             }
         }).start();
     }
+
     private String getFormattedLocation(Location location) {
         String datetime = java.time.LocalDateTime.now().toString().replace("T", " ");
         return datetime + "," + location.getLatitude() + "," + location.getLongitude();
