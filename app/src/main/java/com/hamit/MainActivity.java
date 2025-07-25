@@ -1,6 +1,8 @@
 package com.hamit;
 
 import android.Manifest;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -97,6 +99,32 @@ public class MainActivity extends AppCompatActivity {
 
         updatePermissionStatus();
         checkAndStartService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        SharedPreferences prefs = getSharedPreferences("GPSPrefs", MODE_PRIVATE);
+        boolean runOnStartup = prefs.getBoolean("runOnStartup", false);
+        if (runOnStartup) {
+            boolean serviceRunning = isServiceRunning(GPSService.class);
+            if (!serviceRunning) {
+                Intent intent = new Intent(this, GPSService.class);
+                startForegroundService(intent);
+                Log.d("MainActivity", "onResume ile servis manuel başlatıldı");
+            }
+        }
+    }
+
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void checkAndStartService() {
