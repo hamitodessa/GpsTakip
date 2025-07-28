@@ -31,5 +31,6 @@ public class BootReceiver extends BroadcastReceiver {
                 Log.e("BootReceiver", "Cihaz adı veya e-posta eksik, servis başlatılmadı");
             }
         }
+        AlarmKurucu.alarmKur(context);
     }
 }

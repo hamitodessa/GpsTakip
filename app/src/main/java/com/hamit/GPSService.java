@@ -22,28 +22,34 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GPSService extends Service {
 
     private static final String CHANNEL_ID = "gps_service_channel";
+    private static boolean isRunning = false;
+
     private LocationManager locationManager;
     private LocationListener locationListener;
 
     private String fileName;
+    private static final List<String> logBuffer = new CopyOnWriteArrayList<>();
 
     @Override
     public void onCreate() {
         super.onCreate();
+        if (isRunning) {
+            Log.d("GPSService", "Zaten çalışıyor, tekrar başlatılmayacak");
+            stopSelf();
+            return;
+        }
+        isRunning = true;
         Log.d("GPSService", "onCreate çağrıldı");
-
-        Log.d("GPSService", "onCreate çalıştı!!!");
-        Toast.makeText(this, "GPS Servis Başladı!", Toast.LENGTH_LONG).show(); // GEÇİCİ TEST İÇİN
-
+        Toast.makeText(this, "GPS Servis Başladı!", Toast.LENGTH_LONG).show();
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("GPS Takip Aktif")
@@ -57,38 +63,29 @@ public class GPSService extends Service {
             startForeground(1, notification);
         }
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("GPSService", "onStartCommand çağrıldı");
-
         SharedPreferences prefs = getSharedPreferences("GPSPrefs", MODE_PRIVATE);
-
         String cachedDeviceName = intent.getStringExtra("device_name");
         if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty()) {
             cachedDeviceName = prefs.getString("device_name", "");
         }
-
         String cachedEmail = intent.getStringExtra("email_name");
         if (cachedEmail == null || cachedEmail.trim().isEmpty()) {
             cachedEmail = prefs.getString("email_name", "");
         }
-
         if (cachedDeviceName == null || cachedDeviceName.trim().isEmpty() ||
                 cachedEmail == null || cachedEmail.trim().isEmpty()) {
             Log.e("GPSService", "Cihaz adı veya email boş, servis durduruluyor");
             stopSelf();
             return START_NOT_STICKY;
         }
-
-        if (cachedDeviceName.toLowerCase().endsWith(".txt")) {
-            cachedDeviceName = cachedDeviceName.substring(0, cachedDeviceName.length() - 4);
-        }
         cachedDeviceName = cachedDeviceName.replaceAll("[^a-zA-Z0-9_-]", "_");
         cachedEmail = cachedEmail.replaceAll("[^a-zA-Z0-9@._-]", "_");
-        if (cachedDeviceName.toLowerCase().endsWith(".txt")) {
-            cachedDeviceName = cachedDeviceName.substring(0, cachedDeviceName.length() - 4);
-        }
         fileName = cachedEmail + "_" + cachedDeviceName + "_log.txt";
+
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override public void onLocationChanged(Location location) {
@@ -105,43 +102,39 @@ public class GPSService extends Service {
             return START_NOT_STICKY;
         }
 
-        boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        Log.d("GPSService", "GPS provider aktif mi? → " + isGpsEnabled);
         Location lastKnown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (lastKnown != null) {
-            Log.d("GPSService", "Son bilinen konum: " + lastKnown.getLatitude() + "," + lastKnown.getLongitude());
             handleNewLocation(lastKnown);
-        } else {
-            Log.w("GPSService", "Son bilinen konum yok.");
         }
-
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10_000, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30_000, 0, locationListener);
         return START_STICKY;
     }
 
     private void handleNewLocation(Location location) {
-        Log.d("GPSService", "Konum alındı: " + location.getLatitude() + "," + location.getLongitude());
-        String log = getFormattedLocation(location);
+        String datetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String log = datetime + "," + location.getLatitude() + "," + location.getLongitude();
+        logBuffer.add(log);
+
         new Thread(() -> {
             try {
-                // Önce varsa eski logları gönder
-                CachedLogHelper.sendCachedLogs(getApplicationContext(), fileName);
-                // Sonra yeni veriyi gönder
-                boolean success = FtpUploadHelper.uploadToFTP(fileName, log);
-                // Eğer yeni veri gönderilemediyse cache'e al
-                if (!success) {
-                    CachedLogHelper.cacheLogLocally(getApplicationContext(), log);
+                // Sırala ve tekrar edenleri filtrele
+                List<String> sortedLogs = new java.util.ArrayList<>(logBuffer);
+                Collections.sort(sortedLogs);
+                logBuffer.clear();
+                for (String entry : sortedLogs) {
+                    boolean success = FtpUploadHelper.uploadToFTP(fileName, entry);
+                    if (!success) {
+                        CachedLogHelper.cacheLogLocally(getApplicationContext(), entry);
+                    }
                 }
+                // Cache'leri de gönder
+                CachedLogHelper.sendCachedLogs(getApplicationContext(), fileName);
             } catch (Exception e) {
-                Log.e("GPSService", "FTP upload hatası: " + e.getMessage(), e);
+                Log.e("GPSService", "Log gönderimi hatası: " + e.getMessage(), e);
             }
         }).start();
     }
 
-    private String getFormattedLocation(Location location) {
-        String datetime = java.time.LocalDateTime.now().toString().replace("T", " ");
-        return datetime + "," + location.getLatitude() + "," + location.getLongitude();
-    }
     private void createNotificationChannel() {
         CharSequence name = "GPS Servis Kanalı";
         String description = "Konum servisi bildirimi";
@@ -151,14 +144,17 @@ public class GPSService extends Service {
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) manager.createNotificationChannel(channel);
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
+        isRunning = false;
         Log.d("GPSService", "Servis durduruldu");
     }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {

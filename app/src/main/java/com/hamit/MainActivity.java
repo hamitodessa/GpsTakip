@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
         updatePermissionStatus();
         checkAndStartService();
+        AlarmKurucu.alarmKur(getApplicationContext());
     }
 
     @Override
