@@ -106,7 +106,7 @@ public class GPSService extends Service {
         if (lastKnown != null) {
             handleNewLocation(lastKnown);
         }
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30_000, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15_000, 0, locationListener);
         return START_STICKY;
     }
 

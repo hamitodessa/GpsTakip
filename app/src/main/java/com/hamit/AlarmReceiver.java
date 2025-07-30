@@ -1,0 +1,29 @@
+package com.hamit;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+public class AlarmReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        SharedPreferences prefs = context.getSharedPreferences("GPSPrefs", Context.MODE_PRIVATE);
+        boolean runOnStartup = prefs.getBoolean("runOnStartup", false);
+
+        if (!runOnStartup) return;
+
+        String deviceName = prefs.getString("device_name", "");
+        String emailName = prefs.getString("email_name", "");
+
+        if (!deviceName.isEmpty() && !emailName.isEmpty()) {
+            Intent serviceIntent = new Intent(context, GPSService.class);
+            serviceIntent.putExtra("device_name", deviceName);
+            serviceIntent.putExtra("email_name", emailName);
+            context.startForegroundService(serviceIntent);
+            Log.d("AlarmReceiver", "Alarm tetiklendi, servis başlatıldı");
+        }
+        AlarmKurucu.alarmKur(context);
+    }
+}

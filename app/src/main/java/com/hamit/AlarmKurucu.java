@@ -4,24 +4,34 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.util.Log;
 
 public class AlarmKurucu {
+
     public static void alarmKur(Context context) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, GPSService.class);
-        PendingIntent pendingIntent = PendingIntent.getForegroundService(
-                context, 0, intent, PendingIntent.FLAG_IMMUTABLE
-        );
 
-        long baslangic = System.currentTimeMillis() + 10_000; // 10 saniye sonra başlasın
-        long aralik = 15 * 60 * 1000; // 15 dakika
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        alarmManager.setRepeating(
-                AlarmManager.RTC_WAKEUP,
-                baslangic,
-                aralik,
-                pendingIntent
-        );
+        long triggerAtMillis = System.currentTimeMillis() + 15 * 60 * 1000;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+            );
+        } else {
+            alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+            );
+        }
+
+        Log.d("AlarmKurucu", "Yeni alarm kuruldu");
     }
 }
-

@@ -2,10 +2,12 @@ package com.hamit;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +27,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private TextView permissionStatus;
@@ -43,6 +47,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (!isAutoStartAvailable()) {
+            Log.w("UYARI", "Otomatik başlatma menüsü bu cihazda mevcut değil!");
+            Toast.makeText(this, "Bu cihazda otomatik başlatma menüsü bulunamadı. Uygulamayı elle başlatmalısınız.", Toast.LENGTH_LONG).show();
+        }
         Log.d("GPSService", "Program Başladı");
 
         permissionStatus = findViewById(R.id.permissionStatus);
@@ -99,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
         updatePermissionStatus();
         checkAndStartService();
-        AlarmKurucu.alarmKur(getApplicationContext());
+
     }
 
     @Override
@@ -258,5 +266,17 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("İptal", null)
                 .show();
+    }
+
+    private boolean isAutoStartAvailable() {
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName("com.miui.securitycenter",
+                    "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            List<ResolveInfo> list = getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+            return list != null && list.size() > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
