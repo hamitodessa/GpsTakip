@@ -16,7 +16,7 @@ public class AlarmKurucu {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        long triggerAtMillis = System.currentTimeMillis() + 15 * 60 * 1000;
+        long triggerAtMillis = System.currentTimeMillis() + 5 * 60 * 1000;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(
