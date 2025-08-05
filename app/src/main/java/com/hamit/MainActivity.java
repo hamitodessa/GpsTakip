@@ -49,10 +49,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        if (prefs.getBoolean(KEY_RUN_ON_STARTUP, false)) {
-            AlarmKurucu.alarmKur(this);
-        }
-
         if (!isAutoStartAvailable()) {
             Log.w("UYARI", "Otomatik başlatma menüsü bu cihazda mevcut değil!");
             Toast.makeText(this, "Bu cihazda otomatik başlatma menüsü bulunamadı. Uygulamayı elle başlatmalısınız.", Toast.LENGTH_LONG).show();
@@ -99,10 +95,6 @@ public class MainActivity extends AppCompatActivity {
                     .putString(KEY_EMAIL_NAME, email)
                     .putBoolean(KEY_RUN_ON_STARTUP, runOnStartup)
                     .apply();
-            if (runOnStartup) {
-                AlarmKurucu.alarmKur(this);
-            }
-
             Toast.makeText(this, "Cihaz adı, e-posta ve başlangıç ayarı kaydedildi", Toast.LENGTH_SHORT).show();
         });
         Button btnExit = findViewById(R.id.btnExit);
@@ -282,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent();
             intent.setComponent(new ComponentName("com.miui.securitycenter",
                     "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            startActivity(intent);
             List<ResolveInfo> list = getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
             return list != null && list.size() > 0;
         } catch (Exception e) {

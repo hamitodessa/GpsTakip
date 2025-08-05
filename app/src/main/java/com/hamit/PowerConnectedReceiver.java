@@ -6,13 +6,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-public class AlarmReceiver extends BroadcastReceiver {
+public class PowerConnectedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.d("PowerConnectedReceiver", "Cihaz şarja takıldı");
+
         SharedPreferences prefs = context.getSharedPreferences("GPSPrefs", Context.MODE_PRIVATE);
         boolean runOnStartup = prefs.getBoolean("runOnStartup", false);
-
-        if (!runOnStartup) return;
+        if (!runOnStartup) {
+            Log.d("PowerConnectedReceiver", "runOnStartup devre dışı, servis başlatılmıyor");
+            return;
+        }
 
         String deviceName = prefs.getString("device_name", "");
         String emailName = prefs.getString("email_name", "");
@@ -22,8 +26,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             serviceIntent.putExtra("device_name", deviceName);
             serviceIntent.putExtra("email_name", emailName);
             context.startForegroundService(serviceIntent);
-            Log.d("AlarmReceiver", "Alarm tetiklendi, servis başlatıldı");
+            Log.d("PowerConnectedReceiver", "Servis POWER_CONNECTED ile başlatıldı");
+        } else {
+            Log.e("PowerConnectedReceiver", "Cihaz adı veya e-posta eksik");
         }
-        AlarmKurucu.alarmKur(context);
     }
 }
