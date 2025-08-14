@@ -50,7 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         if (!isAutoStartAvailable()) {
-            Log.w("UYARI", "Otomatik başlatma menüsü bu cihazda mevcut değil!");
+
+            LogUtils.logToFile(this, "UYARI","Otomatik başlatma menüsü bu cihazda mevcut değil!");
+
             Toast.makeText(this, "Bu cihazda otomatik başlatma menüsü bulunamadı. Uygulamayı elle başlatmalısınız.", Toast.LENGTH_LONG).show();
         }
         Log.d("GPSService", "Program Başladı");

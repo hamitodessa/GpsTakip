@@ -43,12 +43,13 @@ public class GPSService extends Service {
     public void onCreate() {
         super.onCreate();
         if (isRunning) {
-            Log.d("GPSService", "Zaten çalışıyor, tekrar başlatılmayacak");
+            LogUtils.logToFile(this, "GPSService", "Zaten çalışıyor, tekrar başlatılmayacak");
+
             stopSelf();
             return;
         }
         isRunning = true;
-        Log.d("GPSService", "onCreate çağrıldı");
+
         Toast.makeText(this, "GPS Servis Başladı!", Toast.LENGTH_LONG).show();
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -97,7 +98,8 @@ public class GPSService extends Service {
         };
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("GPSService", "İzin yok → servis kapatılıyor");
+            LogUtils.logToFile(this, "GPSService", "İzin yok → servis kapatılıyor");
+
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -117,7 +119,7 @@ public class GPSService extends Service {
 
         new Thread(() -> {
             try {
-                // Sırala ve tekrar edenleri filtrele
+
                 List<String> sortedLogs = new java.util.ArrayList<>(logBuffer);
                 Collections.sort(sortedLogs);
                 logBuffer.clear();
@@ -130,7 +132,8 @@ public class GPSService extends Service {
                 // Cache'leri de gönder
                 CachedLogHelper.sendCachedLogs(getApplicationContext(), fileName);
             } catch (Exception e) {
-                Log.e("GPSService", "Log gönderimi hatası: " + e.getMessage(), e);
+                LogUtils.logToFile(this, "GPSService","Log gönderimi hatası: " + e.getMessage());
+
             }
         }).start();
     }
@@ -146,14 +149,17 @@ public class GPSService extends Service {
     }
 
     @Override
-    public void onDestroy() {
+     public void onDestroy() {
         super.onDestroy();
+
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
         isRunning = false;
-        Log.d("GPSService", "Servis durduruldu");
+
+        LogUtils.logToFile(this, "GPSService", "Servis durduruldu");
     }
+
 
     @Nullable
     @Override

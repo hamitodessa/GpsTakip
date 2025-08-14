@@ -17,8 +17,7 @@ public class BootReceiver extends BroadcastReceiver {
                 && !"android.intent.action.MY_PACKAGE_REPLACED".equals(action)) {
             return;
         }
-
-        Log.d("BootReceiver", "Boot/Update olayı yakalandı: " + action);
+        LogUtils.logToFile(context, "BootReceiver", "Boot/Update olayı yakalandı: " + action);
 
         SharedPreferences prefs = context.getSharedPreferences("GPSPrefs", Context.MODE_PRIVATE);
         boolean runOnStartup = prefs.getBoolean("runOnStartup", false);
@@ -26,11 +25,12 @@ public class BootReceiver extends BroadcastReceiver {
         String emailName     = prefs.getString("email_name", "");
 
         if (!runOnStartup) {
-            Log.d("BootReceiver", "runOnStartup=false, servis başlatılmayacak");
+            LogUtils.logToFile(context, "BootReceiver", "runOnStartup=false, servis başlatılmayacak");
             return;
         }
         if (deviceName.isEmpty() || emailName.isEmpty()) {
-            Log.e("BootReceiver", "device_name veya email_name boş, servis başlatılmadı");
+            LogUtils.logToFile(context, "BootReceiver", "device_name veya email_name boş, servis başlatılmadı");
+
             return;
         }
 
@@ -39,7 +39,8 @@ public class BootReceiver extends BroadcastReceiver {
         long last = prefs.getLong("last_boot_receiver_ms", 0L);
         long now  = SystemClock.elapsedRealtime();
         if (now - last < 2000L) {
-            Log.d("BootReceiver", "Debounce: çok hızlı tekrar, atlandı");
+            LogUtils.logToFile(context, "BootReceiver", "Debounce: çok hızlı tekrar, atlandı");
+           ;
             return;
         }
         prefs.edit().putLong("last_boot_receiver_ms", now).apply();
@@ -49,9 +50,11 @@ public class BootReceiver extends BroadcastReceiver {
                     .putExtra("device_name", deviceName)
                     .putExtra("email_name",  emailName);
             context.startForegroundService(svc);
-            Log.d("BootReceiver", "GPSService boot/update ile başlatıldı");
+            LogUtils.logToFile(context, "BootReceiver", "GPSService boot/update ile başlatıldı");
+
         } catch (Exception e) {
-            Log.e("BootReceiver", "startForegroundService hata", e);
+            LogUtils.logToFile(context, "BootReceiver", "startForegroundService hata " + e);
+
         }
     }
 }
